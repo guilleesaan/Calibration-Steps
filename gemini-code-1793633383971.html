@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calibración TIMS METABO - Compass DataAnalysis</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --border-color: #334155;
+      --accent-color: #38bdf8;
+      --accent-hover: #0284c7;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --checked-color: #4ade80;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 10px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-y: hidden; /* Evita el scroll en monitores estándar */
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* Menú Superior Compacto */
+    header {
+      background-color: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .counter-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+
+    .btn-counter {
+      background-color: var(--border-color);
+      color: var(--text-main);
+      border: none;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-counter:hover {
+      background-color: var(--accent-color);
+      color: #000;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      background-color: var(--border-color);
+      color: var(--text-main);
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background-color: var(--accent-color);
+      color: #000;
+    }
+
+    .btn-primary {
+      background-color: var(--accent-color);
+      color: #0f172a;
+    }
+
+    .btn-export {
+      background-color: #8b5cf6;
+      color: #fff;
+    }
+
+    .btn-export:hover {
+      background-color: #7c3aed;
+    }
+
+    /* Lista Ajustada para Ver los 10 Pasos a la Vez */
+    .checklist {
+      background-color: var(--card-bg);
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      padding: 8px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .step-item:hover {
+      background-color: rgba(56, 189, 248, 0.08);
+      border-color: var(--border-color);
+    }
+
+    .step-item.checked {
+      opacity: 0.5;
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .step-item.checked .step-title {
+      text-decoration: line-through;
+      color: var(--checked-color);
+    }
+
+    input[type="checkbox"] {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--accent-color);
+      border-radius: 5px;
+      outline: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: grid;
+      place-content: center;
+    }
+
+    input[type="checkbox"]:checked {
+      background-color: var(--checked-color);
+      border-color: var(--checked-color);
+    }
+
+    input[type="checkbox"]:checked::before {
+      content: "✓";
+      font-size: 16px;
+      color: #0f172a;
+      font-weight: bold;
+    }
+
+    .step-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .step-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    .step-sub {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.2;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: var(--checked-color);
+      color: #0f172a;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .shortcut-hint {
+      text-align: center;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="counter-box">
+      <span>Espectros: <span id="counter" style="color: #fff;">0</span></span>
+      <button class="btn-counter" onclick="changeCounter(1)">+1</button>
+      <button class="btn-counter" onclick="changeCounter(-1)">-1</button>
+      <button class="btn-counter" onclick="resetCounter()" style="font-size: 0.9rem; padding: 4px 8px;">Reset</button>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="toggleFullscreen()">Pantalla Completa</button>
+      <button class="btn btn-export" onclick="exportHTML()">Exportar Web (.html)</button>
+      <button class="btn" onclick="uncheckAll()">Destachar Todo</button>
+    </div>
+  </header>
+
+  <div class="checklist" id="checklist"></div>
+
+  <div class="shortcut-hint">💡 Pulsa <strong>[ENTER]</strong> en tu Mac para marcar cada paso. Al llegar al paso 10, sumará +1 y reiniciará la lista.</div>
+</div>
+
+<div class="toast" id="toast">¡Espectro completado! Contador +1 🚀</div>
+
+<script>
+  const stepsData = [
+    { id: 1, title: "1. Seleccionar cromatograma inicial TIC MS", sub: "Pico de calibrante (formiato sódico + Tuning Mix) al inicio[cite: 1]." },
+    { id: 2, title: "2. Hacer average del cromatograma", sub: "Botón menú superior para extraer espectro de masas[cite: 1]." },
+    { id: 3, title: "3. Copiar a Compound Spectra", sub: "Clic derecho sobre el espectro > Copy to compound spectra[cite: 1]." },
+    { id: 4, title: "4. Calibración Interna de Masa", sub: "Calibrate > Internal > Na Formate (< 1-2 ppm) > Calibrate[cite: 1]." },
+    { id: 5, title: "5. Configurar parámetros de movilidad iónica", sub: "Calibrate > Parameters > Mobility Calibration > Tuning Mix CCS[cite: 1]." },
+    { id: 6, title: "6. Extraer mobilograma del calibrante", sub: "Clic derecho en mobilograma > Edit Mobilograms > Extract calibrant ion[cite: 1]." },
+    { id: 7, title: "7. Integrar y ejecutar Mobility Internal", sub: "Integrar picos > Calibrate > Mobility Internal (< 1%) > Calibrate[cite: 1]." },
+    { id: 8, title: "8. Guardar archivo calibrado", sub: "Guardar los cambios del archivo procesado actual[cite: 1]." },
+    { id: 9, title: "9. Abrir el siguiente archivo de espectro", sub: "Cargar nuevo archivo para liberar el bloqueo del anterior[cite: 1]." },
+    { id: 10, title: "10. Renombrar el archivo anterior ya procesado", sub: "Cambiar el nombre al archivo previo tras abrir el nuevo[cite: 1]." }
+  ];
+
+  let counterVal = parseInt(localStorage.getItem("tims_counter") || "0", 10);
+  let checkedState = JSON.parse(localStorage.getItem("tims_steps") || "[]");
+
+  const checklistEl = document.getElementById("checklist");
+  const counterEl = document.getElementById("counter");
+  const toastEl = document.getElementById("toast");
+
+  function render() {
+    counterEl.textContent = counterVal;
+    checklistEl.innerHTML = "";
+
+    stepsData.forEach(step => {
+      const isChecked = checkedState.includes(step.id);
+      const itemDiv = document.createElement("div");
+      itemDiv.className = `step-item ${isChecked ? 'checked' : ''}`;
+      itemDiv.onclick = () => toggleStep(step.id);
+
+      itemDiv.innerHTML = `
+        <input type="checkbox" ${isChecked ? 'checked' : ''} tabindex="-1">
+        <div class="step-content">
+          <div class="step-title">${step.title}</div>
+          <div class="step-sub">${step.sub}</div>
+        </div>
+      `;
+      checklistEl.appendChild(itemDiv);
+    });
+  }
+
+  function toggleStep(id) {
+    if (checkedState.includes(id)) {
+      checkedState = checkedState.filter(item => item !== id);
+    } else {
+      checkedState.push(id);
+    }
+    saveState();
+    render();
+
+    if (checkedState.length === stepsData.length) {
+      setTimeout(() => {
+        changeCounter(1);
+        uncheckAll();
+        showToast();
+      }, 200);
+    }
+  }
+
+  function changeCounter(delta) {
+    counterVal = Math.max(0, counterVal + delta);
+    saveState();
+    counterEl.textContent = counterVal;
+  }
+
+  function resetCounter() {
+    counterVal = 0;
+    saveState();
+    counterEl.textContent = 0;
+  }
+
+  function uncheckAll() {
+    checkedState = [];
+    saveState();
+    render();
+  }
+
+  function saveState() {
+    localStorage.setItem("tims_counter", counterVal.toString());
+    localStorage.setItem("tims_steps", JSON.stringify(checkedState));
+  }
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      if (document.exitFullscreen) document.exitFullscreen();
+    }
+  }
+
+  function showToast() {
+    toastEl.classList.add("show");
+    setTimeout(() => toastEl.classList.remove("show"), 1800);
+  }
+
+  function exportHTML() {
+    const blob = new Blob([document.documentElement.outerHTML], { type: "text/html" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "manual_calibracion_tims.html";
+    a.click();
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const firstUnchecked = stepsData.find(s => !checkedState.includes(s.id));
+      if (firstUnchecked) {
+        toggleStep(firstUnchecked.id);
+      }
+    }
+  });
+
+  render();
+</script>
+</body>
+</html>
